@@ -5,7 +5,6 @@ class RPCDataModel(BaseModel):
     activity_type: ActivityType | None = None
     status_display_type: StatusDisplayType | None = None
 
-    client_id: str | None = None
     name: str | None = None
     state: str | None = None
     details: str | None = None
