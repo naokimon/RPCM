@@ -8,6 +8,10 @@ from schemas import RPCDataModel
 import requests
 from utils import client_id_exists, resource_path
 
+running = QPixmap(resource_path("./src/images/check.png"))
+stopped = QPixmap(resource_path("./src/images/close.png"))
+loading = QPixmap(resource_path("./src/images/loading.png"))
+
 
 class ClientIdWindow(QMainWindow):
     def __init__(self, main):
@@ -60,7 +64,7 @@ class ClientIdWindow(QMainWindow):
         response = requests.get(url)
 
         if response.status_code == 200:
-            self.status.setPixmap(QPixmap("./src/images/check.png"))
+            self.status.setPixmap(QPixmap(running))
             client_id_exists()
             with open("data/client_id.json", "w") as f:
                 json.dump({
@@ -68,6 +72,7 @@ class ClientIdWindow(QMainWindow):
                 }, f)
             self.main_window.client_id.setText(self.input.text())
         else:
+            self.status.setPixmap(stopped)
             self.error_text.setText("Invalid client ID!")
 
 
@@ -141,9 +146,6 @@ class MainWindow(QMainWindow):
         self.run_btn.clicked.connect(self.run)
         self.stop_btn.clicked.connect(self.stop)
 
-        self.running = QPixmap(resource_path("./src/images/check.png"))
-        self.stopped = QPixmap(resource_path("./src/images/close.png"))
-        self.loading = QPixmap(resource_path("./src/images/loading.png"))
         self.status = QLabel()
         self.status.setPixmap(self.stopped)
         self.status.setScaledContents(True)
@@ -210,16 +212,16 @@ class MainWindow(QMainWindow):
 
         self.run_btn.setEnabled(False)
         self.stop_btn.setEnabled(False)
-        self.status.setPixmap(self.loading)
+        self.status.setPixmap(loading)
 
     def stop(self):
         if self.thread and self.thread.isRunning():
-            self.status.setPixmap(self.loading)
+            self.status.setPixmap(loading)
             self.thread.stop()
             self.stop_btn.setEnabled(False)
 
     def on_thread_finished(self):
-        self.status.setPixmap(self.stopped)
+        self.status.setPixmap(stopped)
         self.stop_btn.setEnabled(False)
         self.run_btn.setEnabled(True)
 
@@ -232,4 +234,4 @@ class MainWindow(QMainWindow):
 
     def on_rpc_connected(self):
         self.stop_btn.setEnabled(True)
-        self.status.setPixmap(self.running)
+        self.status.setPixmap(running)
