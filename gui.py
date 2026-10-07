@@ -6,7 +6,7 @@ import webbrowser
 from rpc import PresenceThread
 from schemas import RPCDataModel
 import requests
-from utils import client_id_exists
+from utils import client_id_exists, resource_path
 
 
 class ClientIdWindow(QMainWindow):
@@ -16,7 +16,7 @@ class ClientIdWindow(QMainWindow):
         self.main_window: MainWindow = main
 
         self.setWindowTitle("RPCM")
-        self.setWindowIcon(QIcon("src/images/RPCM.png"))
+        self.setWindowIcon(QIcon(str(resource_path("src/images/RPCM.ico"))))
 
         container = QWidget()
         self.setCentralWidget(container)
@@ -141,9 +141,9 @@ class MainWindow(QMainWindow):
         self.run_btn.clicked.connect(self.run)
         self.stop_btn.clicked.connect(self.stop)
 
-        self.running = QPixmap("./src/images/check.png")
-        self.stopped = QPixmap("./src/images/close.png")
-        self.loading = QPixmap("./src/images/loading.png")
+        self.running = QPixmap(resource_path("./src/images/check.png"))
+        self.stopped = QPixmap(resource_path("./src/images/close.png"))
+        self.loading = QPixmap(resource_path("./src/images/loading.png"))
         self.status = QLabel()
         self.status.setPixmap(self.stopped)
         self.status.setScaledContents(True)
