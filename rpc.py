@@ -1,22 +1,24 @@
 import json
+from threading import Event
 from pypresence import Presence
 from schemas import RPCDataModel
 from PySide6.QtCore import QThread, Signal
 
 
 class PresenceThread(QThread):
-    finished = Signal()
+    connected = Signal()
     error = Signal(str)
 
     def __init__(self, data: RPCDataModel, parent=None):
         super().__init__(parent)
 
         self.data = data
-        self.running = True
+        self.stop_event = Event()
+        self.set = False
         self.presence = None
 
     def stop(self):
-        self.running = False
+        self.stop_event.set()
 
     def run(self):
         try:
@@ -28,12 +30,15 @@ class PresenceThread(QThread):
             self.presence = Presence(client_id)
             self.presence.connect()
 
-            while self.running:
-                self.presence.update(
-                    **self.data.model_dump(exclude_none=True)
-                )
+            self.connected.emit()
 
-                self.msleep(15_000)
+            payload = self.data.model_dump(exclude_none=True)
+
+            while not self.stop_event.is_set():
+                self.presence.update(**payload)
+
+                if self.stop_event.wait(5):
+                    break
 
         except Exception as e:
             self.error.emit(str(e))
@@ -41,10 +46,9 @@ class PresenceThread(QThread):
         finally:
             if self.presence is not None:
                 try:
+                    self.presence.clear()
                     self.presence.close()
                 except Exception as e:
                     print(e)
 
                 self.presence = None
-
-            self.finished.emit()
