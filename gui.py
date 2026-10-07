@@ -202,14 +202,15 @@ class MainWindow(QMainWindow):
 
         self.thread = PresenceThread(rpc_data)
 
+        self.thread.connected.connect(self.on_rpc_connected)
         self.thread.finished.connect(self.on_thread_finished)
         self.thread.error.connect(self.on_thread_error)
 
         self.thread.start()
 
         self.run_btn.setEnabled(False)
-        self.stop_btn.setEnabled(True)
-        self.status.setPixmap(self.running)
+        self.stop_btn.setEnabled(False)
+        self.status.setPixmap(self.loading)
 
     def stop(self):
         if self.thread and self.thread.isRunning():
@@ -228,3 +229,7 @@ class MainWindow(QMainWindow):
 
     def on_thread_error(self, message):
         self.error_text.setText(message)
+
+    def on_rpc_connected(self):
+        self.stop_btn.setEnabled(True)
+        self.status.setPixmap(self.running)
