@@ -83,7 +83,8 @@ class MainWindow(QMainWindow):
         self.loading = QPixmap(resource_path("./src/images/loading.png"))
 
         self.setWindowTitle("RPCM")
-        self.setWindowIcon(QIcon("src/images/RPCM.png"))
+        icon_path = str(resource_path("./src/images/RPCM.png"))
+        self.setWindowIcon(QIcon(icon_path))
 
         self.thread = None
 
