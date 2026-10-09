@@ -17,8 +17,11 @@ def load_data():
     if not config_file.exists():
         return {}
 
-    with config_file.open("w", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with config_file.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return {}
 
 
 def resource_path(relative_path: str) -> Path:
