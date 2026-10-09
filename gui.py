@@ -65,8 +65,9 @@ class ClientIdWindow(QMainWindow):
 
         if response.status_code == 200:
             self.status.setPixmap(QPixmap(self.running))
-            client_data = {"client_id": self.input.text()}
-            save_data(client_data)
+            data = load_data()
+            data["client_id"] = self.input.text()
+            save_data(data)
             self.main_window.client_id.setText(self.input.text())
         else:
             self.status.setPixmap(self.stopped)
@@ -107,29 +108,33 @@ class MainWindow(QMainWindow):
 
         data = load_data()
         self.client_id = QLabel(str(data.get("client_id")))
-        self.name = QLineEdit()
-        self.state = QLineEdit()
-        self.details = QLineEdit()
+
+        data = load_data()
+        rcp = data.get("recent") or {}
+
+        self.name = QLineEdit(rcp.get("name", ""))
+        self.state = QLineEdit(rcp.get("state", ""))
+        self.details = QLineEdit(rcp.get("details", ""))
 
         form.addRow("Client ID:", self.client_id)
         form.addRow("Name:", self.name)
         form.addRow("State:", self.state)
         form.addRow("Details:", self.details)
 
-        self.large_image = QLineEdit()
+        self.large_image = QLineEdit(rcp.get("large_image", ""))
         form.addRow("Large image:", self.large_image)
-        self.large_text = QLineEdit()
+        self.large_text = QLineEdit(rcp.get("large_text", ""))
         form.addRow("Large text:", self.large_text)
 
-        self.small_image = QLineEdit()
+        self.small_image = QLineEdit(rcp.get("small_image", ""))
         form.addRow("Small image:", self.small_image)
-        self.small_text = QLineEdit()
+        self.small_text = QLineEdit(rcp.get("small_text", ""))
         form.addRow("Small text:", self.small_text)
 
-        self.start = QLineEdit()
+        self.start = QLineEdit(str(rcp.get("start", "")))
         self.start.setValidator(int_validator)
 
-        self.end = QLineEdit()
+        self.end = QLineEdit(str(rcp.get("end", "")))
         self.end.setValidator(int_validator)
 
         form.addRow("Start:", self.start)
@@ -182,7 +187,7 @@ class MainWindow(QMainWindow):
             self.error_text.setText("Invalid client ID!")
             return
 
-        data = {
+        rpc_data = {
             "name": self.name.text().strip() or None,
             "state": self.state.text().strip() or None,
             "details": self.details.text().strip() or None,
@@ -195,12 +200,15 @@ class MainWindow(QMainWindow):
         }
 
         try:
-            rpc_data = RPCDataModel.model_validate(data)
+            validated_data = RPCDataModel.model_validate(rpc_data)
+            data = load_data()
+            data["recent"] = rpc_data
+            save_data(data)
         except Exception as e:
             self.error_text.setText(str(e))
             return
 
-        self.thread = PresenceThread(rpc_data)
+        self.thread = PresenceThread(validated_data)
 
         self.thread.connected.connect(self.on_rpc_connected)
         self.thread.finished.connect(self.on_thread_finished)
