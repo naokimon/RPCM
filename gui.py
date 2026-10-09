@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(container)
         form = QFormLayout()
 
-        regex = QRegularExpression(r"^-?\d*$")
+        regex = QRegularExpression(r"^[1-9]\d*$")
         int_validator = QRegularExpressionValidator(regex)
 
         self.client_id_window = ClientIdWindow(self)
