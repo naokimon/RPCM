@@ -216,16 +216,16 @@ class MainWindow(QMainWindow):
 
         self.run_btn.setEnabled(False)
         self.stop_btn.setEnabled(False)
-        self.status.setPixmap(loading)
+        self.status.setPixmap(self.loading)
 
     def stop(self):
         if self.thread and self.thread.isRunning():
-            self.status.setPixmap(loading)
+            self.status.setPixmap(self.loading)
             self.thread.stop()
             self.stop_btn.setEnabled(False)
 
     def on_thread_finished(self):
-        self.status.setPixmap(stopped)
+        self.status.setPixmap(self.stopped)
         self.stop_btn.setEnabled(False)
         self.run_btn.setEnabled(True)
 
@@ -238,4 +238,4 @@ class MainWindow(QMainWindow):
 
     def on_rpc_connected(self):
         self.stop_btn.setEnabled(True)
-        self.status.setPixmap(running)
+        self.status.setPixmap(self.running)
