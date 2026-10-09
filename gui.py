@@ -1,5 +1,5 @@
 import json
-from PySide6.QtCore import QRegularExpression, QThread
+from PySide6.QtCore import QRegularExpression
 from PySide6.QtWidgets import QMainWindow, QWidget, QFormLayout, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QLabel
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 import webbrowser
@@ -8,16 +8,16 @@ from schemas import RPCDataModel
 import requests
 from utils import client_id_exists, resource_path
 
-running = QPixmap(resource_path("./src/images/check.png"))
-stopped = QPixmap(resource_path("./src/images/close.png"))
-loading = QPixmap(resource_path("./src/images/loading.png"))
-
 
 class ClientIdWindow(QMainWindow):
     def __init__(self, main):
         super().__init__()
 
         self.main_window: MainWindow = main
+
+        self.running = QPixmap(resource_path("./src/images/check.png"))
+        self.stopped = QPixmap(resource_path("./src/images/close.png"))
+        self.loading = QPixmap(resource_path("./src/images/loading.png"))
 
         self.setWindowTitle("RPCM")
         self.setWindowIcon(QIcon(str(resource_path("src/images/RPCM.ico"))))
@@ -64,7 +64,7 @@ class ClientIdWindow(QMainWindow):
         response = requests.get(url)
 
         if response.status_code == 200:
-            self.status.setPixmap(QPixmap(running))
+            self.status.setPixmap(QPixmap(self.running))
             client_id_exists()
             with open("data/client_id.json", "w") as f:
                 json.dump({
@@ -72,13 +72,17 @@ class ClientIdWindow(QMainWindow):
                 }, f)
             self.main_window.client_id.setText(self.input.text())
         else:
-            self.status.setPixmap(stopped)
+            self.status.setPixmap(self.stopped)
             self.error_text.setText("Invalid client ID!")
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self.running = QPixmap(resource_path("./src/images/check.png"))
+        self.stopped = QPixmap(resource_path("./src/images/close.png"))
+        self.loading = QPixmap(resource_path("./src/images/loading.png"))
 
         self.setWindowTitle("RPCM")
         self.setWindowIcon(QIcon("src/images/RPCM.png"))
