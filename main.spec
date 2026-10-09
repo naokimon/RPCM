@@ -5,14 +5,14 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('data', 'data'), ('src/images', 'src/images')],
+    datas=[('src/images', 'src/images')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
-    optimize=0,
+    opti    mize=0,
 )
 pyz = PYZ(a.pure)
 
