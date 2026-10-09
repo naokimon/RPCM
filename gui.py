@@ -41,7 +41,7 @@ class ClientIdWindow(QMainWindow):
 
         self.validate_row = QHBoxLayout()
 
-        self.status_img = QPixmap("./src/images/close.png")
+        self.status_img = self.stopped
         self.status = QLabel()
         self.status.setScaledContents(True)
         self.status.setFixedSize(20, 20)
@@ -64,7 +64,7 @@ class ClientIdWindow(QMainWindow):
         response = requests.get(url)
 
         if response.status_code == 200:
-            self.status.setPixmap(QPixmap(self.running))
+            self.status.setPixmap(self.running)
             data = load_data()
             data["client_id"] = self.input.text()
             save_data(data)
