@@ -3,6 +3,7 @@ from threading import Event
 from pypresence import Presence
 from schemas import RPCDataModel
 from PySide6.QtCore import QThread, Signal
+from utils import load_data
 
 
 class PresenceThread(QThread):
@@ -22,10 +23,8 @@ class PresenceThread(QThread):
 
     def run(self):
         try:
-            with open("data/client_id.json", encoding="utf-8") as f:
-                client_data = json.load(f)
-
-            client_id = client_data["client_id"]
+            data = load_data()
+            client_id = data["client_id"]
 
             self.presence = Presence(client_id)
             self.presence.connect()
