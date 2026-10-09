@@ -1,6 +1,5 @@
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QSharedMemory
-from PySide6.QtCore import Qt
 import sys
 from gui import MainWindow
 
