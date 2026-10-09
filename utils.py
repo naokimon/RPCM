@@ -2,13 +2,23 @@ from pathlib import Path
 import json
 import sys
 
-def client_id_exists():
-    path = Path("data/client_id.json")
+appdata_dir = Path.home() / "AppData" / "Roaming" / "RPCM"
 
-    path.parent.mkdir(parents=True, exist_ok=True)
+appdata_dir.mkdir(parents=True, exist_ok=True)
 
-    if not path.exists():
-        path.write_text(json.dumps({}), encoding="utf-8")
+config_file = appdata_dir / "config.json"
+
+def save_data(data):
+    with config_file.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
+
+
+def load_data():
+    if not config_file.exists():
+        return {}
+
+    with config_file.open("w", encoding="utf-8") as f:
+        return json.load(f)
 
 
 def resource_path(relative_path: str) -> Path:

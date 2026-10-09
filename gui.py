@@ -6,7 +6,7 @@ import webbrowser
 from rpc import PresenceThread
 from schemas import RPCDataModel
 import requests
-from utils import client_id_exists, resource_path
+from utils import load_data, save_data, resource_path
 
 
 class ClientIdWindow(QMainWindow):
@@ -65,11 +65,8 @@ class ClientIdWindow(QMainWindow):
 
         if response.status_code == 200:
             self.status.setPixmap(QPixmap(self.running))
-            client_id_exists()
-            with open("data/client_id.json", "w") as f:
-                json.dump({
-                    "client_id": self.input.text()
-                }, f)
+            client_data = {"client_id": self.input.text()}
+            save_data(client_data)
             self.main_window.client_id.setText(self.input.text())
         else:
             self.status.setPixmap(self.stopped)
@@ -108,11 +105,8 @@ class MainWindow(QMainWindow):
             lambda: webbrowser.open("https://discord.com/developers/home")
         )
 
-        client_id_exists()
-        with open("data/client_id.json") as f:
-            data = json.load(f)
-
-        self.client_id = QLabel(str(data.get("client_id")) or None)
+        data = load_data()
+        self.client_id = QLabel(str(data.get("client_id")))
         self.name = QLineEdit()
         self.state = QLineEdit()
         self.details = QLineEdit()
