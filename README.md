@@ -37,15 +37,23 @@ Your Client ID and the last fields you ran with are saved and restored on the ne
 
 | Field | What it does |
 |---|---|
-| Name | Activity name |
-| State | Second line of text (e.g. "In a group") |
-| Details | First line of text (e.g. "Playing solo") |
-| Large image | Asset key of the large image (uploaded under your app's Rich Presence art assets) |
-| Large text | Tooltip shown when hovering the large image |
-| Small image | Asset key of the small corner image |
-| Small text | Tooltip shown when hovering the small image |
-| Start | Unix timestamp in seconds. Discord shows time elapsed since then |
-| End | Unix timestamp in seconds. Discord shows time remaining until then |
+| `activity_type` | Type of activity: `PLAYING`, `LISTENING`, `WATCHING`, or `COMPETING`. |
+| `status_display_type` | Determines which field to display in the status: `NAME`, `STATE`, or `DETAILS`. |
+| `name` | Activity name displayed in places such as the Discord user list. |
+| `state` | Second line of text describing the user's current status. |
+| `details` | First line of descriptive text explaining what the player is doing. |
+| `large_image` | Asset key of the large image uploaded to your application's Rich Presence art assets. |
+| `large_text` | Tooltip displayed when hovering over the large image. |
+| `small_image` | Asset key of the small corner image uploaded to your application's Rich Presence art assets. |
+| `small_text` | Tooltip displayed when hovering over the small image. |
+| `start` | Unix timestamp in seconds indicating when the activity started. |
+| `end` | Unix timestamp in seconds indicating when the activity ends. |
+| `buttons` | List of dictionaries defining up to two clickable profile buttons, each with a label and URL. |
+| `state_url` | URL that opens when the state text is clicked. |
+| `details_url` | URL that opens when the details text is clicked. |
+| `large_url` | URL that opens when the large image is clicked. |
+| `small_url` | URL that opens when the small image is clicked. |
+| `instance` | Boolean indicating whether the activity represents a specific game session or instance. |
 
 Empty fields are not sent. The presence is re-sent every 5 seconds while running.
 
