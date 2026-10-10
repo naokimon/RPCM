@@ -323,7 +323,7 @@ class MainWindow(QMainWindow):
             "large_text": self.large_text.text().strip() or None,
             "small_image": self.small_image.text().strip() or None,
             "small_text": self.small_text.text().strip() or None,
-            "buttons": buttons,
+            "buttons": buttons or None,
             "start": int(self.start.text()) if self.start.text() else None,
             "end": int(self.end.text()) if self.end.text() else None,
             "state_url": self.state_url.text() or None,
