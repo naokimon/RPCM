@@ -26,11 +26,4 @@ class RPCDataModel(BaseModel):
     large_url: str | None = None
     small_url: str | None = None
 
-    party_id: str | None = None
-    party_size: list[int] | None = None
-
-    join: str | None = None
-    spectate: str | None = None
-    match: str | None = None
-
     instance: bool | None = None
