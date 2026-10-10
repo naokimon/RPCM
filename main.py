@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QSharedMemory
 import sys
-from gui import MainWindow
+from windows.mainwindow import MainWindow
 
 def main():
     app = QApplication(sys.argv)
