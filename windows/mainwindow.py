@@ -1,81 +1,13 @@
 import json
-from PySide6.QtCore import QRegularExpression, Qt
-from PySide6.QtWidgets import QMainWindow, QWidget, QFormLayout, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, \
-    QLabel, QToolButton, QFrame, QCheckBox, QComboBox
-from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 import webbrowser
-
+from PySide6.QtCore import QRegularExpression, Qt
+from PySide6.QtGui import QPixmap, QIcon, QRegularExpressionValidator
+from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QFormLayout, QPushButton, QLabel, QLineEdit, QToolButton, QFrame, QComboBox, QHBoxLayout, QCheckBox, QScrollArea, QSizePolicy
+from windows.clientidwindow import ClientIdWindow
 from pypresence import ActivityType, StatusDisplayType
-
 from rpc import PresenceThread
 from schemas import RPCDataModel
-import requests
-from utils import load_data, save_data, resource_path
-
-
-class ClientIdWindow(QMainWindow):
-    def __init__(self, main):
-        super().__init__()
-
-        self.main_window: MainWindow = main
-
-        self.running = QPixmap(resource_path("./src/images/check.png"))
-        self.stopped = QPixmap(resource_path("./src/images/close.png"))
-        self.loading = QPixmap(resource_path("./src/images/loading.png"))
-
-        self.setWindowTitle("RPCM")
-        self.setWindowIcon(QIcon(str(resource_path("src/images/RPCM.ico"))))
-
-        container = QWidget()
-        self.setCentralWidget(container)
-
-        layout = QVBoxLayout(container)
-
-        self.description = QLabel("Client ID:")
-
-        regex = QRegularExpression(r"^-?\d*$")
-        int_validator = QRegularExpressionValidator(regex)
-
-        self.input = QLineEdit()
-        self.input.setValidator(int_validator)
-
-
-        self.error_text = QLabel()
-        self.error_text.setStyleSheet("color: #FF0000;")
-
-        self.validate_row = QHBoxLayout()
-
-        self.status_img = self.stopped
-        self.status = QLabel()
-        self.status.setScaledContents(True)
-        self.status.setFixedSize(20, 20)
-        self.status.setPixmap(self.status_img)
-
-        self.validate_btn = QPushButton("Validate")
-        self.validate_btn.clicked.connect(self.validate)
-
-        self.validate_row.addWidget(self.validate_btn)
-        self.validate_row.addWidget(self.status)
-
-        layout.addWidget(self.description)
-        layout.addWidget(self.input)
-        layout.addWidget(self.error_text)
-        layout.addLayout(self.validate_row)
-
-    def validate(self):
-        url = f"https://discord.com/api/v10/applications/{self.input.text()}/rpc"
-
-        response = requests.get(url)
-
-        if response.status_code == 200:
-            self.status.setPixmap(self.running)
-            data = load_data()
-            data["client_id"] = self.input.text()
-            save_data(data)
-            self.main_window.client_id.setText(self.input.text())
-        else:
-            self.status.setPixmap(self.stopped)
-            self.error_text.setText("Invalid client ID!")
+from utils import resource_path, load_data, save_data, get_stylesheet
 
 
 class MainWindow(QMainWindow):
@@ -87,16 +19,51 @@ class MainWindow(QMainWindow):
         self.loading = QPixmap(resource_path("./src/images/loading.png"))
 
         self.setWindowTitle("RPCM")
+        self.setMinimumSize(500, 680)
+        self.resize(560, 760)
+
         icon_path = str(resource_path("./src/images/RPCM.png"))
         self.setWindowIcon(QIcon(icon_path))
 
         self.thread = None
 
-        container = QWidget()
-        self.setCentralWidget(container)
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAsNeeded
+        )
 
-        layout = QVBoxLayout(container)
+        self.container = QWidget()
+        self.container.setSizePolicy(
+            QSizePolicy.Policy.Preferred,
+            QSizePolicy.Policy.Minimum,
+        )
+
+        self.scroll_area.setWidget(self.container)
+        self.setCentralWidget(self.scroll_area)
+
+        layout = QVBoxLayout(self.container)
+        layout.setContentsMargins(24, 22, 24, 22)
+        layout.setSpacing(12)
+        layout.setSizeConstraint(
+            QVBoxLayout.SizeConstraint.SetMinimumSize
+        )
+
         form = QFormLayout()
+        form.setContentsMargins(0, 8, 0, 8)
+        form.setHorizontalSpacing(16)
+        form.setVerticalSpacing(11)
+        form.setLabelAlignment(
+            Qt.AlignmentFlag.AlignLeft
+            | Qt.AlignmentFlag.AlignVCenter
+        )
+        form.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow
+        )
 
         regex = QRegularExpression(r"^[1-9]\d*$")
         int_validator = QRegularExpressionValidator(regex)
@@ -104,48 +71,66 @@ class MainWindow(QMainWindow):
         self.client_id_window = ClientIdWindow(self)
 
         self.client_btn = QPushButton("Set Client ID")
+        self.client_btn.setObjectName("secondaryButton")
         self.client_btn.clicked.connect(self.show_client_id)
 
-        self.dev_btn = QPushButton("Go to Developer Portal")
+        self.dev_btn = QPushButton("Open Developer Portal  ↗")
+        self.dev_btn.setObjectName("secondaryButton")
         self.dev_btn.clicked.connect(
-            lambda: webbrowser.open("https://discord.com/developers/home")
+            lambda: webbrowser.open(
+                "https://discord.com/developers/home"
+            )
         )
 
         data = load_data()
-        self.client_id = QLabel(str(data.get("client_id")))
+        self.client_id = QLabel(str(data.get("client_id") or ""))
+        self.client_id.setObjectName("clientIdValue")
+        self.client_id.setWordWrap(True)
+        self.client_id.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
 
-        data = load_data()
         rpc = data.get("recent") or {}
 
-        self.name = QLineEdit(rpc.get("name", ""))
-        self.state = QLineEdit(rpc.get("state", ""))
-        self.details = QLineEdit(rpc.get("details", ""))
+        self.name = QLineEdit(rpc.get("name") or "")
+        self.state = QLineEdit(rpc.get("state") or "")
+        self.details = QLineEdit(rpc.get("details") or "")
 
         form.addRow("Client ID:", self.client_id)
         form.addRow("Name:", self.name)
         form.addRow("State:", self.state)
         form.addRow("Details:", self.details)
 
-        self.large_image = QLineEdit(rpc.get("large_image", ""))
+        self.large_image = QLineEdit(
+            rpc.get("large_image") or ""
+        )
         form.addRow("Large image:", self.large_image)
-        self.large_text = QLineEdit(rpc.get("large_text", ""))
+
+        self.large_text = QLineEdit(
+            rpc.get("large_text") or ""
+        )
         form.addRow("Large text:", self.large_text)
 
-        self.small_image = QLineEdit(rpc.get("small_image", ""))
+        self.small_image = QLineEdit(
+            rpc.get("small_image") or ""
+        )
         form.addRow("Small image:", self.small_image)
-        self.small_text = QLineEdit(rpc.get("small_text", ""))
+
+        self.small_text = QLineEdit(
+            rpc.get("small_text") or ""
+        )
         form.addRow("Small text:", self.small_text)
 
         self.start = QLineEdit(str(rpc.get("start") or ""))
         self.start.setValidator(int_validator)
+        form.addRow("Start:", self.start)
 
         self.end = QLineEdit(str(rpc.get("end") or ""))
         self.end.setValidator(int_validator)
-
-        form.addRow("Start:", self.start)
         form.addRow("End:", self.end)
 
         self.advanced_layout = QVBoxLayout()
+        self.advanced_layout.setSpacing(8)
 
         self.advanced_btn = QToolButton()
         self.advanced_btn.setText("Advanced options")
@@ -155,12 +140,17 @@ class MainWindow(QMainWindow):
             Qt.ToolButtonStyle.ToolButtonTextBesideIcon
         )
         self.advanced_btn.setArrowType(Qt.ArrowType.RightArrow)
+        self.advanced_btn.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Fixed,
+        )
 
         self.advanced_btn.setStyleSheet("""
             QToolButton {
                 border: none;
                 text-align: left;
             }
+
             QToolButton:hover {
                 color: #d6d6d6;
             }
@@ -169,35 +159,61 @@ class MainWindow(QMainWindow):
         self.advanced_btn.clicked.connect(self.toggle_advanced)
 
         self.advanced_container = QFrame()
+        self.advanced_container.setObjectName("advancedPanel")
         self.advanced_container.setVisible(False)
+        self.advanced_container.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Maximum,
+        )
 
-        self.advanced_options = QFormLayout(self.advanced_container)
+        self.advanced_options = QFormLayout(
+            self.advanced_container
+        )
+        self.advanced_options.setContentsMargins(12, 12, 12, 12)
+        self.advanced_options.setHorizontalSpacing(12)
+        self.advanced_options.setVerticalSpacing(10)
+        self.advanced_options.setLabelAlignment(
+            Qt.AlignmentFlag.AlignLeft
+            | Qt.AlignmentFlag.AlignVCenter
+        )
+        self.advanced_options.setFieldGrowthPolicy(
+            QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow
+        )
 
         self.activity_type = QComboBox()
         self.activity_type.addItems([
             "Playing",
             "Listening",
             "Watching",
-            "Competing"
+            "Competing",
         ])
 
         self.status_display_type = QComboBox()
         self.status_display_type.addItems([
             "Name",
             "State",
-            "Details"
+            "Details",
         ])
 
-        self.advanced_options.addRow("Activity types:", self.activity_type)
-        self.advanced_options.addRow("Status display types:", self.status_display_type)
+        self.advanced_options.addRow(
+            "Activity types:",
+            self.activity_type,
+        )
+        self.advanced_options.addRow(
+            "Status display types:",
+            self.status_display_type,
+        )
 
         self.button_label = QLabel("Buttons:")
+
         self.button_row = QHBoxLayout()
+        self.button_row.setSpacing(12)
 
         self.btn1_text = QLineEdit()
         self.btn1_url = QLineEdit()
 
         self.btn1_col = QFormLayout()
+        self.btn1_col.setVerticalSpacing(8)
         self.btn1_col.addRow("Text:", self.btn1_text)
         self.btn1_col.addRow("URL:", self.btn1_url)
 
@@ -205,19 +221,20 @@ class MainWindow(QMainWindow):
         self.btn2_url = QLineEdit()
 
         self.btn2_col = QFormLayout()
+        self.btn2_col.setVerticalSpacing(8)
         self.btn2_col.addRow("Text:", self.btn2_text)
         self.btn2_col.addRow("URL:", self.btn2_url)
 
-        self.button_row.addLayout(self.btn1_col)
-        self.button_row.addLayout(self.btn2_col)
+        self.button_row.addLayout(self.btn1_col, 1)
+        self.button_row.addLayout(self.btn2_col, 1)
 
         self.advanced_options.addRow(self.button_label)
         self.advanced_options.addRow(self.button_row)
 
-        self.state_url = QLineEdit(rpc.get("state_url"))
-        self.details_url = QLineEdit(rpc.get("details_url"))
-        self.large_url = QLineEdit(rpc.get("large_url"))
-        self.small_url = QLineEdit(rpc.get("small_url"))
+        self.state_url = QLineEdit(rpc.get("state_url") or "")
+        self.details_url = QLineEdit(rpc.get("details_url") or "")
+        self.large_url = QLineEdit(rpc.get("large_url") or "")
+        self.small_url = QLineEdit(rpc.get("small_url") or "")
 
         self.advanced_options.addRow("State URL:", self.state_url)
         self.advanced_options.addRow("Details URL:", self.details_url)
@@ -225,57 +242,107 @@ class MainWindow(QMainWindow):
         self.advanced_options.addRow("Small Image URL:", self.small_url)
 
         self.instance = QCheckBox()
-        self.instance.setChecked(True) if rpc.get("instance") is True else self.instance.setChecked(False)
+        self.instance.setChecked(rpc.get("instance") is True)
+
         self.advanced_options.addRow("Instance:", self.instance)
+
 
         self.advanced_layout.addWidget(self.advanced_btn)
         self.advanced_layout.addWidget(self.advanced_container)
 
         run_row = QHBoxLayout()
+        run_row.setSpacing(12)
 
-        self.run_btn = QPushButton("Run")
-        self.stop_btn = QPushButton("Stop")
+        self.run_btn = QPushButton("Start presence")
+        self.run_btn.setObjectName("primaryButton")
+
+        self.stop_btn = QPushButton("Stop presence")
+        self.stop_btn.setObjectName("dangerButton")
         self.stop_btn.setEnabled(False)
 
         self.run_btn.clicked.connect(self.run)
         self.stop_btn.clicked.connect(self.stop)
 
         self.status = QLabel()
+        self.status.setObjectName("connectionStatus")
+        self.status.setToolTip("Presence connection status")
         self.status.setPixmap(self.stopped)
         self.status.setScaledContents(True)
         self.status.setFixedSize(25, 25)
 
         buttons_col = QVBoxLayout()
+        buttons_col.setSpacing(8)
         buttons_col.addWidget(self.run_btn)
         buttons_col.addWidget(self.stop_btn)
 
         run_row.addLayout(buttons_col)
         run_row.addWidget(self.status)
+        run_row.addStretch(1)
 
         self.error_row = QHBoxLayout()
+
         self.error_text = QLabel()
-        self.error_text.setStyleSheet("color: #FF0000;")
+        self.error_text.setObjectName("errorText")
+        self.error_text.setWordWrap(True)
+        self.error_text.setSizePolicy(
+            QSizePolicy.Policy.Expanding,
+            QSizePolicy.Policy.Minimum,
+        )
+
         self.error_row.addWidget(self.error_text)
 
         bottom_layout = QVBoxLayout()
+        bottom_layout.setSpacing(8)
         bottom_layout.addLayout(self.error_row)
         bottom_layout.addLayout(run_row)
-        bottom_layout.addSpacing(2)
 
         layout.addWidget(self.client_btn)
         layout.addWidget(self.dev_btn)
         layout.addLayout(form)
+        layout.addWidget(self._section_divider())
         layout.addLayout(self.advanced_layout)
-        layout.addStretch()
         layout.addLayout(bottom_layout)
 
+        data = load_data()
+
+        if not data.get("theme"):
+            data["theme"] = "dark"
+            save_data(data)
+
+        theme_name = data["theme"]
+
+        with open(resource_path("./data/themes.json"), encoding="utf-8",) as f:
+            themes = json.load(f)
+
+        theme = themes[theme_name]
+
+        self.setStyleSheet(get_stylesheet(theme))
+
+    @staticmethod
+    def _section_divider():
+        divider = QFrame()
+        divider.setFrameShape(QFrame.Shape.HLine)
+        divider.setFrameShadow(QFrame.Shadow.Plain)
+        divider.setStyleSheet("""
+            color: #deded5;
+            background-color: #deded5;
+            max-height: 1px;
+            border: none;
+        """)
+        return divider
+
     def toggle_advanced(self, checked):
-        self.advanced_container.setVisible(True) if not self.advanced_container.isVisible() \
-        else self.advanced_container.setVisible(False)
+        self.advanced_container.setVisible(checked)
 
         self.advanced_btn.setArrowType(
-            Qt.ArrowType.DownArrow if checked else Qt.ArrowType.RightArrow
+            Qt.ArrowType.DownArrow
+            if checked
+            else Qt.ArrowType.RightArrow
         )
+
+        self.container.layout().activate()
+        self.container.adjustSize()
+        self.scroll_area.widget().updateGeometry()
 
     def show_client_id(self):
         self.client_id_window.show()
@@ -293,25 +360,27 @@ class MainWindow(QMainWindow):
             (self.btn1_text, self.btn1_url),
             (self.btn2_text, self.btn2_url),
         ]:
-            if text_field.text() and url_field.text():
+            button_text = text_field.text().strip()
+            button_url = url_field.text().strip()
+
+            if button_text and button_url:
                 buttons.append({
-                    "label": text_field.text(),
-                    "url": url_field.text()
+                    "label": button_text,
+                    "url": button_url,
                 })
 
         activity_types = {
             "Playing": ActivityType.PLAYING,
             "Listening": ActivityType.LISTENING,
             "Watching": ActivityType.WATCHING,
-            "Competing": ActivityType.COMPETING
+            "Competing": ActivityType.COMPETING,
         }
 
         status_display_types = {
             "Name": StatusDisplayType.NAME,
             "State": StatusDisplayType.STATE,
-            "Details": StatusDisplayType.DETAILS
+            "Details": StatusDisplayType.DETAILS,
         }
-
 
         rpc_data = {
             "activity_type": activity_types[self.activity_type.currentText()],
@@ -324,23 +393,27 @@ class MainWindow(QMainWindow):
             "small_image": self.small_image.text().strip() or None,
             "small_text": self.small_text.text().strip() or None,
             "buttons": buttons or None,
-            "start": int(self.start.text()) if self.start.text() else None,
-            "end": int(self.end.text()) if self.end.text() else None,
-            "state_url": self.state_url.text() or None,
-            "details_url": self.details_url.text() or None,
-            "large_url": self.large_url.text() or None,
-            "small_url": self.small_url.text() or None,
-            "instance": self.instance.isChecked()
+            "start": (int(self.start.text()) if self.start.text() else None),
+            "end": (int(self.end.text()) if self.end.text() else None),
+            "state_url": self.state_url.text().strip() or None,
+            "details_url": self.details_url.text().strip() or None,
+            "large_url": self.large_url.text().strip() or None,
+            "small_url": self.small_url.text().strip() or None,
+            "instance": self.instance.isChecked(),
         }
 
         try:
             validated_data = RPCDataModel.model_validate(rpc_data)
+
             data = load_data()
             data["recent"] = rpc_data
             save_data(data)
+
         except Exception as e:
             self.error_text.setText(str(e))
             return
+
+        self.error_text.clear()
 
         self.thread = PresenceThread(validated_data)
 
@@ -348,11 +421,11 @@ class MainWindow(QMainWindow):
         self.thread.finished.connect(self.on_thread_finished)
         self.thread.error.connect(self.on_thread_error)
 
-        self.thread.start()
-
         self.run_btn.setEnabled(False)
         self.stop_btn.setEnabled(False)
         self.status.setPixmap(self.loading)
+
+        self.thread.start()
 
     def stop(self):
         if self.thread and self.thread.isRunning():
