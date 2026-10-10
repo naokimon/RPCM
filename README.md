@@ -74,7 +74,7 @@ Delete this file to reset the app.
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconsole --onefile --name main --icon src/images/RPCM.ico --add-data "src/images;src/images" main.py
+pyinstaller --noconsole --onefile --name RPCM-v1.0.0-windows-x64 --icon src/images/RPCM.ico --add-data "src/images;src/images" --add-data "data/themes.json;data" main.py
 ```
 
 Output: `dist/main.exe`. The `--add-data` flag bundles the icons and status images; the app finds them at runtime through `resource_path()` in `utils.py`.
@@ -91,6 +91,7 @@ Output: `dist/main.exe`. The `--add-data` flag bundles the icons and status imag
 | `requirements.txt` | Dependencies: `requests`, `pyside6`, `pypresence`, `pydantic` |
 | `main.spec` | PyInstaller build spec (bundles `src/images`, windowed, uses `RPCM.ico`) |
 | `src/images/` | `RPCM.ico` / `RPCM.png` (app icon), `check.png` / `close.png` / `loading.png` (status icons) |
+| `data/themes.json` | `Themes` All themes in a JSON file |
 | `.gitignore` | Ignores `.idea/`, `.venv/`, `__pycache__/`, `data/`, `dist/`, `build/` |
 
 
