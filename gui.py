@@ -1,6 +1,7 @@
 import json
-from PySide6.QtCore import QRegularExpression
-from PySide6.QtWidgets import QMainWindow, QWidget, QFormLayout, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QLabel
+from PySide6.QtCore import QRegularExpression, Qt
+from PySide6.QtWidgets import QMainWindow, QWidget, QFormLayout, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, \
+    QLabel, QToolButton, QFrame, QCheckBox
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 import webbrowser
 from rpc import PresenceThread
@@ -102,8 +103,8 @@ class MainWindow(QMainWindow):
         self.client_btn = QPushButton("Set Client ID")
         self.client_btn.clicked.connect(self.show_client_id)
 
-        self.image_btn = QPushButton("Go to Developer Portal")
-        self.image_btn.clicked.connect(
+        self.dev_btn = QPushButton("Go to Developer Portal")
+        self.dev_btn.clicked.connect(
             lambda: webbrowser.open("https://discord.com/developers/home")
         )
 
@@ -132,14 +133,82 @@ class MainWindow(QMainWindow):
         self.small_text = QLineEdit(rcp.get("small_text", ""))
         form.addRow("Small text:", self.small_text)
 
-        self.start = QLineEdit(str(rcp.get("start", "")))
+        self.start = QLineEdit(str(rcp.get("start") or ""))
         self.start.setValidator(int_validator)
 
-        self.end = QLineEdit(str(rcp.get("end", "")))
+        self.end = QLineEdit(str(rcp.get("end") or ""))
         self.end.setValidator(int_validator)
 
         form.addRow("Start:", self.start)
         form.addRow("End:", self.end)
+
+        self.advanced_layout = QVBoxLayout()
+
+        self.advanced_btn = QToolButton()
+        self.advanced_btn.setText("Advanced options")
+        self.advanced_btn.setCheckable(True)
+        self.advanced_btn.setChecked(False)
+        self.advanced_btn.setToolButtonStyle(
+            Qt.ToolButtonStyle.ToolButtonTextBesideIcon
+        )
+        self.advanced_btn.setArrowType(Qt.ArrowType.RightArrow)
+
+        self.advanced_btn.setStyleSheet("""
+            QToolButton {
+                border: none;
+                text-align: left;
+            }
+            QToolButton:hover {
+                color: #d6d6d6;
+            }
+        """)
+
+        self.advanced_btn.clicked.connect(self.toggle_advanced)
+
+        self.advanced_container = QFrame()
+        self.advanced_container.setVisible(False)
+
+        self.advanced_options = QFormLayout(self.advanced_container)
+
+        self.button_label = QLabel("Buttons:")
+        self.button_row = QHBoxLayout()
+
+        self.btn1_text = QLineEdit()
+        self.btn1_url = QLineEdit()
+
+        self.btn1_col = QFormLayout()
+        self.btn1_col.addRow("Text:", self.btn1_text)
+        self.btn1_col.addRow("URL:", self.btn1_url)
+
+        self.btn2_text = QLineEdit()
+        self.btn2_url = QLineEdit()
+
+        self.btn2_col = QFormLayout()
+        self.btn2_col.addRow("Text:", self.btn2_text)
+        self.btn2_col.addRow("URL:", self.btn2_url)
+
+        self.button_row.addLayout(self.btn1_col)
+        self.button_row.addLayout(self.btn2_col)
+
+        self.advanced_options.addRow(self.button_label)
+        self.advanced_options.addRow(self.button_row)
+
+        self.state_url = QLineEdit(rcp.get("state_url"))
+        self.details_url = QLineEdit(rcp.get("details_url"))
+        self.large_url = QLineEdit(rcp.get("large_url"))
+        self.small_url = QLineEdit(rcp.get("small_url"))
+
+        self.advanced_options.addRow("State URL:", self.state_url)
+        self.advanced_options.addRow("Details URL:", self.details_url)
+        self.advanced_options.addRow("Large Image URL:", self.large_url)
+        self.advanced_options.addRow("Small Image URL:", self.small_url)
+
+        self.instance = QCheckBox()
+        self.instance.setChecked(True) if rcp.get("instance") is True else self.instance.setChecked(False)
+        self.advanced_options.addRow("Instance:", self.instance)
+
+        self.advanced_layout.addWidget(self.advanced_btn)
+        self.advanced_layout.addWidget(self.advanced_container)
 
         run_row = QHBoxLayout()
 
@@ -173,10 +242,19 @@ class MainWindow(QMainWindow):
         bottom_layout.addSpacing(2)
 
         layout.addWidget(self.client_btn)
-        layout.addWidget(self.image_btn)
+        layout.addWidget(self.dev_btn)
         layout.addLayout(form)
+        layout.addLayout(self.advanced_layout)
         layout.addStretch()
         layout.addLayout(bottom_layout)
+
+    def toggle_advanced(self, checked):
+        self.advanced_container.setVisible(True) if not self.advanced_container.isVisible() \
+        else self.advanced_container.setVisible(False)
+
+        self.advanced_btn.setArrowType(
+            Qt.ArrowType.DownArrow if checked else Qt.ArrowType.RightArrow
+        )
 
     def show_client_id(self):
         self.client_id_window.show()
@@ -188,6 +266,20 @@ class MainWindow(QMainWindow):
             self.error_text.setText("Invalid client ID!")
             return
 
+        buttons = []
+
+        for text_field, url_field in [
+            (self.btn1_text, self.btn1_url),
+            (self.btn2_text, self.btn2_url),
+        ]:
+            if text_field.text() and url_field.text():
+                buttons.append({
+                    "label": text_field.text(),
+                    "url": url_field.text()
+                })
+
+        print(buttons)
+
         rpc_data = {
             "name": self.name.text().strip() or None,
             "state": self.state.text().strip() or None,
@@ -196,8 +288,14 @@ class MainWindow(QMainWindow):
             "large_text": self.large_text.text().strip() or None,
             "small_image": self.small_image.text().strip() or None,
             "small_text": self.small_text.text().strip() or None,
+            "buttons": buttons,
             "start": int(self.start.text()) if self.start.text() else None,
             "end": int(self.end.text()) if self.end.text() else None,
+            "state_url": self.state_url.text() or None,
+            "details_url": self.details_url.text() or None,
+            "large_url": self.large_url.text() or None,
+            "small_url": self.small_url.text() or None,
+            "instance": self.instance.isChecked()
         }
 
         try:
