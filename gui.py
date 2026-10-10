@@ -115,31 +115,31 @@ class MainWindow(QMainWindow):
         self.client_id = QLabel(str(data.get("client_id")))
 
         data = load_data()
-        rcp = data.get("recent") or {}
+        rpc = data.get("recent") or {}
 
-        self.name = QLineEdit(rcp.get("name", ""))
-        self.state = QLineEdit(rcp.get("state", ""))
-        self.details = QLineEdit(rcp.get("details", ""))
+        self.name = QLineEdit(rpc.get("name", ""))
+        self.state = QLineEdit(rpc.get("state", ""))
+        self.details = QLineEdit(rpc.get("details", ""))
 
         form.addRow("Client ID:", self.client_id)
         form.addRow("Name:", self.name)
         form.addRow("State:", self.state)
         form.addRow("Details:", self.details)
 
-        self.large_image = QLineEdit(rcp.get("large_image", ""))
+        self.large_image = QLineEdit(rpc.get("large_image", ""))
         form.addRow("Large image:", self.large_image)
-        self.large_text = QLineEdit(rcp.get("large_text", ""))
+        self.large_text = QLineEdit(rpc.get("large_text", ""))
         form.addRow("Large text:", self.large_text)
 
-        self.small_image = QLineEdit(rcp.get("small_image", ""))
+        self.small_image = QLineEdit(rpc.get("small_image", ""))
         form.addRow("Small image:", self.small_image)
-        self.small_text = QLineEdit(rcp.get("small_text", ""))
+        self.small_text = QLineEdit(rpc.get("small_text", ""))
         form.addRow("Small text:", self.small_text)
 
-        self.start = QLineEdit(str(rcp.get("start") or ""))
+        self.start = QLineEdit(str(rpc.get("start") or ""))
         self.start.setValidator(int_validator)
 
-        self.end = QLineEdit(str(rcp.get("end") or ""))
+        self.end = QLineEdit(str(rpc.get("end") or ""))
         self.end.setValidator(int_validator)
 
         form.addRow("Start:", self.start)
@@ -214,10 +214,10 @@ class MainWindow(QMainWindow):
         self.advanced_options.addRow(self.button_label)
         self.advanced_options.addRow(self.button_row)
 
-        self.state_url = QLineEdit(rcp.get("state_url"))
-        self.details_url = QLineEdit(rcp.get("details_url"))
-        self.large_url = QLineEdit(rcp.get("large_url"))
-        self.small_url = QLineEdit(rcp.get("small_url"))
+        self.state_url = QLineEdit(rpc.get("state_url"))
+        self.details_url = QLineEdit(rpc.get("details_url"))
+        self.large_url = QLineEdit(rpc.get("large_url"))
+        self.small_url = QLineEdit(rpc.get("small_url"))
 
         self.advanced_options.addRow("State URL:", self.state_url)
         self.advanced_options.addRow("Details URL:", self.details_url)
@@ -225,7 +225,7 @@ class MainWindow(QMainWindow):
         self.advanced_options.addRow("Small Image URL:", self.small_url)
 
         self.instance = QCheckBox()
-        self.instance.setChecked(True) if rcp.get("instance") is True else self.instance.setChecked(False)
+        self.instance.setChecked(True) if rpc.get("instance") is True else self.instance.setChecked(False)
         self.advanced_options.addRow("Instance:", self.instance)
 
         self.advanced_layout.addWidget(self.advanced_btn)
