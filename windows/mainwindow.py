@@ -256,6 +256,19 @@ class MainWindow(QMainWindow):
             "Pink"
         ])
 
+        theme_name = data["theme"].lower()
+
+        themes = {
+            "dark": 0,
+            "light": 1,
+            "red": 2,
+            "blue": 3,
+            "green": 4,
+            "pink": 5
+        }
+
+        self.theme.setCurrentIndex(themes[theme_name])
+
         self.theme.currentTextChanged.connect(self.change_theme)
 
         self.advanced_options.addRow("Themes:", self.theme)
