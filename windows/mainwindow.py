@@ -246,6 +246,19 @@ class MainWindow(QMainWindow):
 
         self.advanced_options.addRow("Instance:", self.instance)
 
+        self.theme = QComboBox()
+        self.theme.addItems([
+            "Dark",
+            "Light",
+            "Red",
+            "Blue",
+            "Green",
+            "Pink"
+        ])
+
+        self.theme.currentTextChanged.connect(self.change_theme)
+
+        self.advanced_options.addRow("Themes:", self.theme)
 
         self.advanced_layout.addWidget(self.advanced_btn)
         self.advanced_layout.addWidget(self.advanced_container)
@@ -330,6 +343,23 @@ class MainWindow(QMainWindow):
             border: none;
         """)
         return divider
+
+    def change_theme(self):
+        theme_name = self.theme.currentText().lower()
+
+        with open(resource_path("./data/themes.json"), encoding="utf-8",) as f:
+            themes = json.load(f)
+
+        theme = themes[theme_name]
+
+        data = load_data()
+
+        data["theme"] = theme_name
+
+        save_data(data)
+
+        self.setStyleSheet(get_stylesheet(theme))
+        self.client_id_window.setStyleSheet(get_stylesheet(theme))
 
     def toggle_advanced(self, checked):
         self.advanced_container.setVisible(checked)
