@@ -1,9 +1,12 @@
 import json
 from PySide6.QtCore import QRegularExpression, Qt
 from PySide6.QtWidgets import QMainWindow, QWidget, QFormLayout, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, \
-    QLabel, QToolButton, QFrame, QCheckBox
+    QLabel, QToolButton, QFrame, QCheckBox, QComboBox
 from PySide6.QtGui import QIcon, QPixmap, QRegularExpressionValidator
 import webbrowser
+
+from pypresence import ActivityType, StatusDisplayType
+
 from rpc import PresenceThread
 from schemas import RPCDataModel
 import requests
@@ -170,6 +173,24 @@ class MainWindow(QMainWindow):
 
         self.advanced_options = QFormLayout(self.advanced_container)
 
+        self.activity_type = QComboBox()
+        self.activity_type.addItems([
+            "Playing",
+            "Listening",
+            "Watching",
+            "Competing"
+        ])
+
+        self.status_display_type = QComboBox()
+        self.status_display_type.addItems([
+            "Name",
+            "State",
+            "Details"
+        ])
+
+        self.advanced_options.addRow("Activity types:", self.activity_type)
+        self.advanced_options.addRow("Status display types:", self.status_display_type)
+
         self.button_label = QLabel("Buttons:")
         self.button_row = QHBoxLayout()
 
@@ -278,9 +299,23 @@ class MainWindow(QMainWindow):
                     "url": url_field.text()
                 })
 
-        print(buttons)
+        activity_types = {
+            "Playing": ActivityType.PLAYING,
+            "Listening": ActivityType.LISTENING,
+            "Watching": ActivityType.WATCHING,
+            "Competing": ActivityType.COMPETING
+        }
+
+        status_display_types = {
+            "Name": StatusDisplayType.NAME,
+            "State": StatusDisplayType.STATE,
+            "Details": StatusDisplayType.DETAILS
+        }
+
 
         rpc_data = {
+            "activity_type": activity_types[self.activity_type.currentText()],
+            "status_display_type": status_display_types[self.status_display_type.currentText()],
             "name": self.name.text().strip() or None,
             "state": self.state.text().strip() or None,
             "details": self.details.text().strip() or None,
